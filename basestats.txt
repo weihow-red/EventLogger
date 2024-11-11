@@ -1,0 +1,5 @@
+Logins:4.0:1.5:2:
+Time online:150.5:25.0:3:
+Emails sent:10.0:3.0:1:
+Emails opened:12.0:4.5:1:
+Emails deleted:7.0:2.25:2:
