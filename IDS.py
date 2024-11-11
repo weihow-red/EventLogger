@@ -1,5 +1,7 @@
 import sys
 import os
+import random
+import numpy as np
 
 # Basic command line parsing
 if len(sys.argv) != 5:
@@ -44,14 +46,29 @@ def parse_events(file_path):
             # data format {Logins : {'type': 'D', 'min': 0.0, 'max': None, 'weight': 2}}
             event_name, event_type, min_val, max_val, weight = line[0], line[1], line[2], line[3], line[4]
 
-            # store in event dictionary
-            events[event_name] = {
-                'type': event_type,
-                'min': float(min_val) if min_val else None,
-                'max': float(max_val) if max_val else None,
-                'weight': int(weight)
-            }
-            print(f"File events: {event_name} -> {events[event_name]}")
+            if event_type == 'D':
+                # store in event dictionary
+                events[event_name] = {
+                    'type': event_type,
+                    'min': int(min_val) if min_val else int(0),
+                    'max': int(max_val) if max_val else int(0),
+                    'weight': int(weight)
+                }
+            else:
+                # store in event dictionary
+                events[event_name] = {
+                    'type': event_type,
+                    'min': float(min_val) if min_val else 0.0,
+                    'max': float(max_val) if max_val else 0.0,
+                    'weight': int(weight)
+                }
+            # print(f"File event: {event_name} -> {events[event_name]}")
+            
+        if events:  # This checks if events is not empty
+            print(f"Successfully loaded {file_path} file")
+        else:
+            print(f"Failed to load {file_path} file, events is empty.")
+
     return events
 
 
@@ -88,56 +105,20 @@ def parse_stats(file_path):
             # data format {Logins : {'mean': 4.0, 'std_dev': 1.5}}
             event_name, mean, std_dev = line[0], float(line[1]), float(line[2])
             stats[event_name] = {
-                'mean': mean,
-                'std_dev': std_dev
+                'mean': float(mean),
+                'std_dev': float(std_dev)
             }
-            print(f"File stats: {event_name} -> {stats[event_name]}")
+            # print(f"File stats: {event_name} -> {stats[event_name]}")
+
+        if stats:  # This checks if stats is not empty
+            print(f"Successfully loaded {file_path} file")
+        else:
+            print(f"Failed to load {file_path} file, stats is empty.")
+
     return stats
 
 
-def get_basestats(events, stats):
-    '''
-    Combines event statistics from the stats and events dictionaries,
-    adds weight information from events, and saves the result to a text file.
-    Returns a dictionary with the combined base statistics.
-    '''
-    
-    basestats = {}  # Dictionary to store combined statistics for each event
-    
-    # Combine stats and weights from events and stats dictionaries
-    for event_name, stat_values in stats.items():
-        if event_name in events:
-            combined_entry = {
-                'mean': stat_values['mean'],
-                'std_dev': stat_values['std_dev'],
-                'min': events[event_name].get('min', 0),  # Replace None with 0
-                'max': events[event_name].get('max', 0),  # Replace None with 0
-                'weight': events[event_name]['weight']
-            }
-            basestats[event_name] = combined_entry
-            print(f"Base stats: {event_name} -> {combined_entry}")
-        else:
-            print(f"Warning: {event_name} found in stats but not in events.")
-    
-    # Save basestats to a text file in a tab-separated format
-    with open("basestats.txt", 'w') as f:
-        # Write header with alignment
-        f.write(f"{'Event Name':<15}\t{'Mean':<8}\t{'Std Dev':<8}\t{'Min':<8}\t{'Max':<8}\t{'Weight':<8}\n")
-        
-        # Write each event's stats with better alignment, handling None values as 0
-        for event_name, data in basestats.items():
-            min_val = data['min'] if data['min'] is not None else 0
-            max_val = data['max'] if data['max'] is not None else 0
-            
-            # Format the line with the data, replacing None with 0
-            line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{min_val:<8}\t{max_val:<8}\t{data['weight']:<8}\n"
-            f.write(line)
-    
-    print("Base stats saved to basestats.txt")
-    return basestats
-
-
-def get_threshold(basestats):
+def cal_threshold(basestats):
     '''
     Calculates a threshold value based on the weights of events in the basestats dictionary.
 
@@ -162,8 +143,67 @@ def get_threshold(basestats):
 
     threshold = threshold * 2 # sum * 2
 
-    print(f"threshold: {threshold}")
+    #print(f"threshold: {threshold}")
     return threshold
+
+
+def cal_basestats(events, stats):
+    '''
+    Combines event statistics from the stats and events dictionaries,
+    adds weight information from events, 
+    calculate and add the threshold,
+    and saves the result to a text file.
+    Returns a dictionary with the combined base statistics.
+    '''
+    
+    basestats = {}  # Dictionary to store combined statistics for each event
+    
+    # Combine stats and weights from events and stats dictionaries
+    for event_name, stat_values in stats.items():
+        if event_name in events:
+            combined_entry = {
+                'mean': stat_values['mean'],
+                'std_dev': stat_values['std_dev'],
+                'min': events[event_name]['min'],
+                'max': events[event_name]['max'],
+                'weight': events[event_name]['weight'],
+                'type': events[event_name]['type'],
+            }
+            basestats[event_name] = combined_entry
+            #print(f"Base stats: {event_name} -> {combined_entry}")
+        else:
+            print(f"Warning: {event_name} found in stats but not in events.")
+
+    if basestats:  # This checks if basestats is not empty
+        # calculate threshold 
+        threshold = cal_threshold(basestats)
+        
+        # Save basestats to a text file in a tab-separated format
+        with open("basestats.txt", 'w') as f:
+            # Write header with alignment
+            f.write(f"{'Event Name':<15}\t{'Mean':<8}\t{'Std Dev':<8}\t{'Min':<8}\t{'Max':<8}\t{'Weight':<8}\t{'Data Type':<8}\n")
+            
+            # Write each event's stats with better alignment
+            for event_name, data in basestats.items():
+
+                # Format continuous data to 2 decimal place
+                if basestats[event_name]['type'] == 'C':
+                    line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{data['min']:<8.2f}\t{data['max']:<8.2f}\t{data['weight']:<8}\t{data['type']:<8}\n"
+
+                else:
+                    line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{data['min']:<8}\t{data['max']:<8}\t{data['weight']:<8}\t{data['type']:<8}\n"
+
+                f.write(line)
+
+            # set threshold
+            basestats['Threshold'] = threshold
+            f.write(f"{'Threshold':<15}\t{threshold:<8}\n")
+
+        print("Successfully save Basestats to basestats.txt")
+    else:
+        print(f"Basestats is empty.")
+
+    return basestats
 
 
 def validate_consistency(events, stats):
@@ -273,16 +313,105 @@ def calculate_intrusion(events, stats, days, threshold=2.0):
     return alerts
 
 
+def generate_event_data(basestats, days):
+    '''
+    Generate events over a number of days based on the statistics in basestats.
+    Returns a list of generated events for each day.
+    '''
+    event_log = []
+    threshold = basestats['Threshold']
+
+    # Generate events for each day
+    for day in range(1, days + 1):
+        daily_events = {}
+        print(f"Generating events for Day {day}...")
+
+        #print(basestats)
+
+        for event_name, stats in basestats.items():
+            if event_name == "Threshold":
+                continue  # Skip threshold
+
+            # Get event parameters (mean, std_dev, min, max, weight)
+            mean_val = stats['mean']
+            std_dev = stats['std_dev']
+            min_val = stats['min']
+            max_val = stats['max']
+            weight = stats['weight']
+            datatype = stats['type']
+
+            #print (f"event: {event_name} / mean: {mean_val}")
+            # value = (z-score * stddiv) + mean
+
+            # Generate a random z-score (between -3 and 3 for most events)
+            z_score = random.uniform(-3, 3)
+            event_value = (z_score * std_dev) + mean_val
+
+            if datatype == 'C':  # Continuous events
+                event_value = round(event_value, 2)
+            elif datatype == 'D':  # Discrete events
+                event_value = round(event_value)
+
+            # Log the event value for the day
+            daily_events[event_name] = event_value
+
+            # Check if this event exceeds the threshold
+            deviation = abs(event_value - mean_val) / std_dev if std_dev != 0 else 0
+            score = deviation * weight
+            
+            if score > threshold:
+                print(f"Alert: {event_name} score {score} exceeds threshold {threshold} on Day {day}")
+
+        # # Append the day's events to the event log
+        # event_log.append(daily_events)
+
+        # # Provide periodic feedback (e.g., every 10%)
+        # if day % (days // 10) == 0:
+        #     print(f"{(day / days) * 100:.1f}% progress...")
+
+    print("Event generation completed.")
+    return event_log
+
+
+def save_event_log(event_log):
+    if event_log:  # This checks if event_log is not empty
+        
+        # Save event_log to a text file in a tab-separated format
+        with open("event_log.txt", 'w') as f:
+            # Write header with alignment
+            f.write(f"{'Event Name':<15}\t{'Mean':<8}\t{'Std Dev':<8}\t{'Min':<8}\t{'Max':<8}\t{'Weight':<8}\n")
+            
+            # Write each event's stats with better alignment, handling None values as 0
+            for event_name, data in event_log.items():
+                min_val = data['min'] if data['min'] is not None else 0
+                max_val = data['max'] if data['max'] is not None else 0
+                
+                # Format the line with the data, replacing None with 0
+                line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{min_val:<8}\t{max_val:<8}\t{data['weight']:<8}\n"
+                f.write(line)
+
+        print("Successfully save event_log to event_log.txt")
+    else:
+        print(f"Event log is empty.")
+
+    return
+
+
 if __name__ == "__main__":
     print(f"Starting Intrusion Detection System with {function} mode.")
     events = parse_events(events_file)
     stats = parse_stats(stats_file)
-    basestats = get_basestats(events, stats)
-    threshold = get_threshold(basestats)
+    basestats = cal_basestats(events, stats)
+    inconsistencies = validate_consistency(events, stats) # Validate file consistency
 
-    # Validate consistency
-    inconsistencies = validate_consistency(events, stats)
+
+    # Generate the event log
+    event_log = generate_event_data(basestats, days)
+
+    # Save to a log file or process the generated events as needed
+
+
     
-    # If no inconsistencies, proceed with IDS
-    if not inconsistencies:
-        calculate_intrusion(events, stats, days)
+    # # If no inconsistencies, proceed with IDS
+    # if not inconsistencies:
+    #     calculate_intrusion(events, stats, days)
