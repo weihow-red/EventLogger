@@ -313,7 +313,7 @@ def calculate_intrusion(events, stats, days, threshold=2.0):
     return alerts
 
 
-def generate_event_data(basestats, days):
+def generate_event_data(basestats, total_num_days):
     '''
     Generate events over a number of days based on the statistics in basestats.
     Returns a list of generated events for each day.
@@ -322,7 +322,7 @@ def generate_event_data(basestats, days):
     threshold = basestats['Threshold']
 
     # Generate events for each day
-    for day in range(1, days + 1):
+    for day in range(1, total_num_days + 1):
         daily_events = {}
         print(f"Generating events for Day {day}...")
 
@@ -353,6 +353,7 @@ def generate_event_data(basestats, days):
                 event_value = round(event_value)
 
             # Log the event value for the day
+            daily_events['day'] = day
             daily_events[event_name] = event_value
 
             # Check if this event exceeds the threshold
@@ -362,14 +363,17 @@ def generate_event_data(basestats, days):
             if score > threshold:
                 print(f"Alert: {event_name} score {score} exceeds threshold {threshold} on Day {day}")
 
-        # # Append the day's events to the event log
-        # event_log.append(daily_events)
+        # Append the day's events to the event log
+        event_log.append(daily_events)
 
-        # # Provide periodic feedback (e.g., every 10%)
-        # if day % (days // 10) == 0:
-        #     print(f"{(day / days) * 100:.1f}% progress...")
+        # Provide periodic feedback (e.g., every 10%)
+        if day % (total_num_days // 10) == 0:
+            print(f"{(day / total_num_days) * 100:.1f}% progress...")
 
     print("Event generation completed.")
+    for i in event_log:
+        print (i)
+        
     return event_log
 
 
