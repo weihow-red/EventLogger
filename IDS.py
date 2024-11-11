@@ -366,14 +366,14 @@ def generate_event_data(basestats, total_num_days):
         # Append the day's events to the event log
         event_log.append(daily_events)
 
-        # Provide periodic feedback (e.g., every 10%)
-        if day % (total_num_days // 10) == 0:
-            print(f"{(day / total_num_days) * 100:.1f}% progress...")
+        # Provide periodic progress for each day (e.g., 17%)
+        progress = (day / total_num_days) * 100  # Calculate progress in percentage
+        print(f"Day {day} completed, progress {progress:.0f}%")
 
     print("Event generation completed.")
     for i in event_log:
         print (i)
-        
+
     return event_log
 
 
