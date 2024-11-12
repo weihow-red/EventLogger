@@ -455,22 +455,32 @@ def save_event_log(event_log, event_stats):
 
         # Save event_log to a text file in a tab-separated format
         with open(filename, 'w') as f:
-            # Write header with alignment
+            # Write event log header with alignment
             f.write(f"{'Day':<10}\t{'Logins':<10}\t{'Time Online':<10}\t{'Emails sent':<10}\t{'Emails opened':<10}\t{'Emails deleted':<10}\n")
             
-            # Write each event's stats with better alignment, handling None values as 0
+            # Write each event's stats with better alignment
             for event in event_log:
-                # Format the line with the data, replacing None with 0
+                # Format the line with the data
                 line = f"{event['Day']:<10}\t{event['Logins']:<10}\t{event['Time online']:<10}\t{event['Emails sent']:<10}\t{event['Emails opened']:<10}\t{event['Emails deleted']:<10}\n"
+                f.write(line)
+            
+            f.write("\nEvent Stats\n")
+
+            # Write event stats header with alignment
+            f.write(f"{'Event Names':<15}\t{'Mean':<10}\t{'Std Dev':<10}\n")
+            
+            for event_name, stats in event_stats.items():
+                # Format the line with the data
+                line = f"{event_name:<15}\t{stats['Mean']:<10.2f}\t{stats['Std Dev']:<10.2f}\n"
                 f.write(line)
 
         print("Successfully save event_log to event_log.txt")
         counter = counter + 1 # increase counter per file saved
+
     else:
         print(f"Event log is empty.")
 
     return
-
 
 
 if __name__ == "__main__":
