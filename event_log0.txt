@@ -1,0 +1,6 @@
+Day       	Logins    	Time Online	Emails sent	Emails opened	Emails deleted
+1         	2         	130.52    	6         	7         	4         
+2         	5         	118.5     	13        	16        	9         
+3         	5         	171.27    	11        	14        	8         
+4         	3         	157.23    	7         	8         	5         
+5         	5         	174.99    	13        	16        	9         

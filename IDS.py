@@ -1,6 +1,7 @@
 import sys
 import os
 import random
+import statistics
 import numpy as np
 
 # Basic command line parsing
@@ -11,6 +12,7 @@ if len(sys.argv) != 5:
 function, events_file, stats_file, days = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 print(f"Running function: {function}, Events file: {events_file}, Stats file: {stats_file}, Days: {days}")
 
+counter = 0 # counter to track the number of simulation event created
 
 def parse_events(file_path):
     '''
@@ -313,13 +315,40 @@ def calculate_intrusion(events, stats, days, threshold=2.0):
     return alerts
 
 
+def get_mean_std(vals):
+    '''
+    Calculate mean and std dev of a list of interger / float
+    '''
+
+    # Calculate mean and standard deviation of the generated values
+    mean = statistics.mean(vals)
+    std_dev = statistics.stdev(vals)
+
+    return mean, std_dev
+
+
 def generate_event_data(basestats, total_num_days):
     '''
-    Generate events over a number of days based on the statistics in basestats.
+    Generate events for total_num_days based on the statistics in basestats.
     Returns a list of generated events for each day.
     '''
     event_log = []
     threshold = basestats['Threshold']
+
+    # Generate random values to normalization
+    random_discrete_vals = []
+    for _ in range(total_num_days):
+        random_val = random.randint(0, 100000)
+        random_discrete_vals.append(random_val)
+
+    random_cont_vals = []
+    for _ in range(total_num_days):
+        random_val = random.randint(0, 3000)
+        random_cont_vals.append(random_val)
+
+    # Calculate mean and std for continous and discrete datatype for zscore normalization
+    cont_mean, cont_std = get_mean_std(random_cont_vals)
+    disc_mean, disc_std = get_mean_std(random_discrete_vals)
 
     # Generate events for each day
     for day in range(1, total_num_days + 1):
@@ -341,19 +370,19 @@ def generate_event_data(basestats, total_num_days):
             datatype = stats['type']
 
             #print (f"event: {event_name} / mean: {mean_val}")
-            # value = (z-score * stddiv) + mean
 
-            # Generate a random z-score (between -3 and 3 for most events)
-            z_score = random.uniform(-3, 3)
-            event_value = (z_score * std_dev) + mean_val
-
+            # Generate a random normalizae value
             if datatype == 'C':  # Continuous events
+                zscore = (random_cont_vals[day-1] - cont_mean) / cont_std
+                event_value = (zscore * std_dev) + mean_val
                 event_value = round(event_value, 2)
-            elif datatype == 'D':  # Discrete events
+            else:  # Discrete events
+                zscore = (random_discrete_vals[day-1] - disc_mean) / disc_std
+                event_value = (zscore * std_dev) + mean_val
                 event_value = round(event_value)
 
             # Log the event value for the day
-            daily_events['day'] = day
+            daily_events["Day"] = day
             daily_events[event_name] = event_value
 
             # Check if this event exceeds the threshold
@@ -377,28 +406,71 @@ def generate_event_data(basestats, total_num_days):
     return event_log
 
 
-def save_event_log(event_log):
+def cal_livestats(event_log):
+    '''
+    Calculate mean, standard deviation for event log
+    and saves the result to a text file.
+    Returns a dictionary with of the statistics.
+    '''
+
+    # Initialize a dictionary to hold the values for each event
+    event_data = {
+        'Logins': [],
+        'Time online': [],
+        'Emails sent': [],
+        'Emails opened': [],
+        'Emails deleted': []
+    }
+
+    # Populate event_data with values from each day's log
+    for daily_log in event_log:
+        for event_name in event_data:
+            event_data[event_name].append(daily_log[event_name])
+
+    # Calculate mean and standard deviation for each event
+    event_stats = {}
+    for event_name, values in event_data.items():
+        mean = statistics.mean(values)
+        std_dev = statistics.stdev(values)
+        event_stats[event_name] = {'Mean': mean, 'Std Dev': std_dev}
+
+    # Display results
+    print("Event Name\tMean\t\tStd Dev")
+    for event_name, stats in event_stats.items():
+        print(f"{event_name:<15}\t{stats['Mean']:.2f}\t\t{stats['Std Dev']:.2f}")
+
+    return event_stats
+
+
+def save_event_log(event_log, event_stats):
+    '''
+    Save event log and stats as filename#.txt,
+    where # is the ID of the simulation event log
+    '''
+    counter = 0
+
     if event_log:  # This checks if event_log is not empty
         
+        filename = f"event_log{counter}.txt"
+
         # Save event_log to a text file in a tab-separated format
-        with open("event_log.txt", 'w') as f:
+        with open(filename, 'w') as f:
             # Write header with alignment
-            f.write(f"{'Event Name':<15}\t{'Mean':<8}\t{'Std Dev':<8}\t{'Min':<8}\t{'Max':<8}\t{'Weight':<8}\n")
+            f.write(f"{'Day':<10}\t{'Logins':<10}\t{'Time Online':<10}\t{'Emails sent':<10}\t{'Emails opened':<10}\t{'Emails deleted':<10}\n")
             
             # Write each event's stats with better alignment, handling None values as 0
-            for event_name, data in event_log.items():
-                min_val = data['min'] if data['min'] is not None else 0
-                max_val = data['max'] if data['max'] is not None else 0
-                
+            for event in event_log:
                 # Format the line with the data, replacing None with 0
-                line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{min_val:<8}\t{max_val:<8}\t{data['weight']:<8}\n"
+                line = f"{event['Day']:<10}\t{event['Logins']:<10}\t{event['Time online']:<10}\t{event['Emails sent']:<10}\t{event['Emails opened']:<10}\t{event['Emails deleted']:<10}\n"
                 f.write(line)
 
         print("Successfully save event_log to event_log.txt")
+        counter = counter + 1 # increase counter per file saved
     else:
         print(f"Event log is empty.")
 
     return
+
 
 
 if __name__ == "__main__":
@@ -408,14 +480,15 @@ if __name__ == "__main__":
     basestats = cal_basestats(events, stats)
     inconsistencies = validate_consistency(events, stats) # Validate file consistency
 
-
     # Generate the event log
     event_log = generate_event_data(basestats, days)
 
-    # Save to a log file or process the generated events as needed
+    # Calculate statistic of event log
+    event_stats = cal_livestats(event_log)
 
+    # Save event log into a event_log#.txt file
+    save_event_log(event_log, event_stats)
 
-    
     # # If no inconsistencies, proceed with IDS
     # if not inconsistencies:
     #     calculate_intrusion(events, stats, days)
