@@ -1,0 +1,6 @@
+Event Names    	Mean      	Std Dev   	Weight    
+Logins         	4.10      	1.45      	2         
+Time online    	150.50    	25.00     	3         
+Emails sent    	10.10     	3.11      	1         
+Emails opened  	12.10     	4.38      	1         
+Emails deleted 	6.90      	2.42      	2         

@@ -1,0 +1,70 @@
+Day 1 Activity:
+Logins: 3
+Time online: 171.7
+Emails sent: 9
+Emails opened: 12
+Emails deleted: 6
+
+Day 2 Activity:
+Logins: 6
+Time online: 138.97
+Emails sent: 14
+Emails opened: 14
+Emails deleted: 5
+
+Day 3 Activity:
+Logins: 2
+Time online: 150.36
+Emails sent: 13
+Emails opened: 8
+Emails deleted: 8
+
+Day 4 Activity:
+Logins: 6
+Time online: 155.02
+Emails sent: 12
+Emails opened: 7
+Emails deleted: 10
+
+Day 5 Activity:
+Logins: 4
+Time online: 139.32
+Emails sent: 9
+Emails opened: 13
+Emails deleted: 3
+
+Day 6 Activity:
+Logins: 4
+Time online: 150.87
+Emails sent: 10
+Emails opened: 11
+Emails deleted: 5
+
+Day 7 Activity:
+Logins: 3
+Time online: 119.77
+Emails sent: 13
+Emails opened: 2
+Emails deleted: 6
+
+Day 8 Activity:
+Logins: 4
+Time online: 147.79
+Emails sent: 14
+Emails opened: 14
+Emails deleted: 6
+
+Day 9 Activity:
+Logins: 4
+Time online: 174.0
+Emails sent: 9
+Emails opened: 14
+Emails deleted: 11
+
+Day 10 Activity:
+Logins: 4
+Time online: 155.2
+Emails sent: 4
+Emails opened: 9
+Emails deleted: 7
+

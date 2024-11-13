@@ -1,0 +1,6 @@
+Event Analysis Results:
+Logins: Mean = 4, Std Dev = 1.25
+Time online: Mean = 150.3, Std Dev = 15.82
+Emails sent: Mean = 10.7, Std Dev = 3.13
+Emails opened: Mean = 10.4, Std Dev = 3.92
+Emails deleted: Mean = 6.7, Std Dev = 2.41
