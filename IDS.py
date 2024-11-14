@@ -51,18 +51,18 @@ def parse_events(file_path):
             if event_type == 'D':
                 # store in event dictionary
                 events[event_name] = {
-                    'type': event_type,
-                    'min': int(min_val) if min_val else int(0),
-                    'max': int(max_val) if max_val else int(0),
-                    'weight': int(weight)
+                    'Type': event_type,
+                    'Min': int(min_val) if min_val else int(0),
+                    'Max': int(max_val) if max_val else int(0),
+                    'Weight': int(weight)
                 }
             else:
                 # store in event dictionary
                 events[event_name] = {
-                    'type': event_type,
-                    'min': float(min_val) if min_val else 0.0,
-                    'max': float(max_val) if max_val else 0.0,
-                    'weight': int(weight)
+                    'Type': event_type,
+                    'Min': float(min_val) if min_val else 0.0,
+                    'Max': float(max_val) if max_val else 0.0,
+                    'Weight': int(weight)
                 }
             # print(f"File event: {event_name} -> {events[event_name]}")
             
@@ -105,8 +105,8 @@ def parse_stats(file_path):
             # data format {Logins : {'mean': 4.0, 'std_dev': 1.5}}
             event_name, mean, std_dev = line[0], float(line[1]), float(line[2])
             stats[event_name] = {
-                'mean': float(mean),
-                'std_dev': float(std_dev)
+                'Mean': float(mean),
+                'Std_dev': float(std_dev)
             }
             # print(f"File stats: {event_name} -> {stats[event_name]}")
 
@@ -117,7 +117,7 @@ def parse_stats(file_path):
 
     return stats
 
-def cal_threshold(basestats):
+def cal_threshold(stats):
     '''
     Calculates a threshold value based on the weights of events in the basestats dictionary.
 
@@ -137,8 +137,8 @@ def cal_threshold(basestats):
     threshold = 0 # thershold to be 2 * sum for weights
     
     # loop through basestats and sum the weights
-    for event_name in basestats:
-        threshold += basestats[event_name]['weight']
+    for event_name in stats:
+        threshold += stats[event_name]['Weight']
 
     threshold = threshold * 2 # sum * 2
 
@@ -192,8 +192,8 @@ def validate_consistency(events, stats):
         event = events[event_name]
         if event_name in stats:
             stat = stats[event_name]
-            if event['type'] == 'C' and (event['min'] is not None and event['max'] is not None):
-                if stat['mean'] < event['min'] or stat['mean'] > event['max']:
+            if event['Type'] == 'C' and (event['Min'] is not None and event['Max'] is not None):
+                if stat['Mean'] < event['Min'] or stat['Mean'] > event['Max']:
                     inconsistencies.append(f"{event_name}: mean is outside of specified min/max range.")
 
     if inconsistencies:
@@ -220,12 +220,12 @@ def cal_basestats(events, stats):
     for event_name, stat_values in stats.items():
         if event_name in events:
             combined_entry = {
-                'mean': stat_values['mean'],
-                'std_dev': stat_values['std_dev'],
-                'min': events[event_name]['min'],
-                'max': events[event_name]['max'],
-                'weight': events[event_name]['weight'],
-                'type': events[event_name]['type'],
+                'Mean': stat_values['Mean'],
+                'Std_dev': stat_values['Std_dev'],
+                'Min': events[event_name]['Min'],
+                'Max': events[event_name]['Max'],
+                'Weight': events[event_name]['Weight'],
+                'Type': events[event_name]['Type'],
             }
             basestats[event_name] = combined_entry
             #print(f"Base stats: {event_name} -> {combined_entry}")
@@ -247,11 +247,11 @@ def save_basestats(basestats):
             for event_name, data in basestats.items():
 
                 # Format continuous data to 2 decimal place
-                if basestats[event_name]['type'] == 'C':
-                    line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{data['min']:<8.2f}\t{data['max']:<8.2f}\t{data['weight']:<8}\t{data['type']:<8}\n"
+                if basestats[event_name]['Type'] == 'C':
+                    line = f"{event_name:<15}\t{data['Mean']:<8}\t{data['Std_dev']:<8}\t{data['Min']:<8.2f}\t{data['Max']:<8.2f}\t{data['Weight']:<8}\t{data['Type']:<8}\n"
 
                 else:
-                    line = f"{event_name:<15}\t{data['mean']:<8}\t{data['std_dev']:<8}\t{data['min']:<8}\t{data['max']:<8}\t{data['weight']:<8}\t{data['type']:<8}\n"
+                    line = f"{event_name:<15}\t{data['Mean']:<8}\t{data['Std_dev']:<8}\t{data['Min']:<8}\t{data['Max']:<8}\t{data['Weight']:<8}\t{data['Type']:<8}\n"
 
                 f.write(line)
 
@@ -294,12 +294,12 @@ def generate_event_data(basestats, total_num_days):
         for event_name, stats in basestats.items():
 
             # Get event parameters (mean, std_dev, min, max, weight)
-            mean_val = stats['mean']
-            std_dev = stats['std_dev']
-            weight = stats['weight']
-            min_val = stats['min']
-            max_val = stats['max']
-            datatype = stats['type']
+            mean_val = stats['Mean']
+            std_dev = stats['Std_dev']
+            weight = stats['Weight']
+            min_val = stats['Min']
+            max_val = stats['Max']
+            datatype = stats['Type']
 
             #print (f"event: {event_name} / mean: {mean_val}")
 
@@ -393,7 +393,7 @@ def analysis_events(event_log, basestats):
         mean = statistics.mean(values)
         std_dev = statistics.stdev(values)
         std_dev = round(std_dev,2)
-        event_stats[event_name] = {'Mean': mean, 'Std Dev': std_dev, 'Weight': basestats[event_name]['weight']}
+        event_stats[event_name] = {'Mean': mean, 'Std Dev': std_dev, 'Weight': basestats[event_name]['Weight']}
 
     # # Display results
     # print("Event Name\tMean\t\tStd Dev")
@@ -445,15 +445,13 @@ def save_daily_total(daily_total):
 
     print(f"Successfully save daily total as {filename}")
 
-def cal_dailycounter(event_log, event_stats):
+def cal_dailycounter(event_log, event_stats, threshold):
     
     '''
-    Calculates potential intrusions by monitoring event deviations over a specified number of days, 
-    and triggers alerts when deviations exceed a defined threshold.
-
-    For each event, the function calculates a `score` based on the deviation of the event's mean from its minimum allowed value, weighted by the event's significance (`weight`).
-    Alerts are triggered when the score exceeds the specified `threshold`.
-    All alerts are printed to the console as they are triggered, and a message is printed if no alerts are triggered throughout the monitoring period.
+    Calculates daily anomally and total daily anomally counter,
+    anommally counter is user for dectecting data anomally.
+    Event anomally counter is calculated by  (abs((event mean) - event value) / event std) * weight
+    Daily anomally counter is define as sum of daily event anomally counter
     '''
     
     # Calculate anomalies
@@ -461,10 +459,11 @@ def cal_dailycounter(event_log, event_stats):
 
     for day_data in event_log:
         day = int(day_data['Day'])
-        print(f"Day {day}:...")
+        #print(f"Analysis Day {day}:...")
 
         # Initialize the day's anomaly data
         event_anomaly = {'Day': day}
+        event_flag = 'Okay'
         anomaly_sum = 0
 
         # Iterate over each event in the daily log (skip 'Day' key)
@@ -486,15 +485,21 @@ def cal_dailycounter(event_log, event_stats):
             else:
                 print(f"Warning: Event '{event_name}' not found in stats.")
 
-        # Add sum of anomalies to the day's anomaly data
-        event_anomaly['Daily Counter'] = anomaly_sum
+        # Add sum of anomalies to the day's anomaly data and detect any anomally
+        if (anomaly_sum > threshold):
+            event_flag = 'Flagged'
+
+        event_anomaly['Total Anomally'] = anomaly_sum
+        event_anomaly['Status'] = event_flag
+
         daily_anomaly.append(event_anomaly)
+
 
     # # Display results in the format of event_log
     # for day_anomaly in daily_anomaly:
     #     print(day_anomaly)
     return daily_anomaly
-def save_dailycounter(dailycounter):
+def save_dailycounter(dailycounter, threshold):
     '''
     Save daily counter as filename#.txt,
     where # is the ID of the simulation event log
@@ -507,12 +512,17 @@ def save_dailycounter(dailycounter):
         # Save event_log to a text file in a tab-separated format
         with open(filename, 'w') as f:
             # Write event log header with alignment
-            f.write(f"{'Day':<5}\t{'Logins':<20}\t{'Time Online':<20}\t{'Emails sent':<20}\t{'Emails opened':<20}\t{'Emails deleted':<20}\t{'Daily Counter':<20}\n")
+            f.write(f"{'Threshold':<10}{threshold:<5}\n")
+
+            # Write event log header with alignment
+            f.write(f"{'Day':<5}\t{'Logins':<20}\t{'Time Online':<20}\t{'Emails sent':<20}\t{'Emails opened':<20}\t{'Emails deleted':<20}\t{'Total Anomally':<20}\t{'Status':<20}\n")
             
             # Write each event's stats with better alignment
             for event in dailycounter:
+                if (event == 'Threshold'): continue
+
                 # Format the line with the data
-                line = f"{event['Day']:<5}\t{event['Logins']:<20}\t{event['Time online']:<20}\t{event['Emails sent']:<20}\t{event['Emails opened']:<20}\t{event['Emails deleted']:<20}\t{event['Daily Counter']:<20}\n"
+                line = f"{event['Day']:<5}\t{event['Logins']:<20}\t{event['Time online']:<20}\t{event['Emails sent']:<20}\t{event['Emails opened']:<20}\t{event['Emails deleted']:<20}\t{event['Total Anomally']:<20}\t{event['Status']:<20}\n"
                 f.write(line)
 
         print(f"Successfully save daily counter as {filename}")
@@ -521,6 +531,7 @@ def save_dailycounter(dailycounter):
         print(f"Daily counter is empty.")
 
     return
+
 
 if __name__ == "__main__":
     print(f"Starting Intrusion Detection System with {function} mode.")
@@ -541,10 +552,11 @@ if __name__ == "__main__":
     save_daily_total(daily_total)                                       # Save daily total into a daily_total#.txt file
 
     # testing anomally detection
-    dailycounter = cal_dailycounter(event_log, event_stats)
-    save_dailycounter(dailycounter)
+    threshold = cal_threshold(event_stats)
+    dailycounter = cal_dailycounter(event_log, event_stats, threshold)
+    save_dailycounter(dailycounter, threshold)
 
-    counter = counter + 1 # increase counter per generation
+    #counter = counter + 1 # increase counter per generation
 
     while (True):
         user_decision = input("Enter 'q' to quit or press enter to continue: ")
@@ -553,7 +565,8 @@ if __name__ == "__main__":
         new_statsfile = input("Enter new stats filename: ")
         days = int(input("Enter number of days: "))
 
-        stats = parse_stats(stats_file)     # read stats file
+        stats = parse_stats(stats_file)                         # read new stats file
+        #stats = parse_stats(new_statsfile)                         # read new stats file
         basestats = cal_basestats(events, stats)                # get combine event and stats file and save as basestats.txtprint(f"Generating event log for {days} number of days...")
         save_basestats(basestats)                               # Save baseline stats into a baseline.txt file
         
@@ -565,5 +578,11 @@ if __name__ == "__main__":
         save_analysis_stats(event_stats)                                # Save stats into a event_stat.txt file
         save_daily_total(daily_total)                                   # Save daily total into a daily_total.txt file
         
-        counter = counter + 1 # increase counter per generation
+        
+        # testing anomally detection
+        threshold = cal_threshold(event_stats)
+        dailycounter = cal_dailycounter(event_log, event_stats, threshold)
+        save_dailycounter(dailycounter, threshold)
+
+        #counter = counter + 1 # increase counter per generation
 
