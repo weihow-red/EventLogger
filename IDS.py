@@ -556,7 +556,7 @@ if __name__ == "__main__":
     dailycounter = cal_dailycounter(event_log, event_stats, threshold)
     save_dailycounter(dailycounter, threshold)
 
-    #counter = counter + 1 # increase counter per generation
+    counter = counter + 1 # increase counter per generation
 
     while (True):
         user_decision = input("Enter 'q' to quit or press enter to continue: ")
@@ -565,8 +565,7 @@ if __name__ == "__main__":
         new_statsfile = input("Enter new stats filename: ")
         days = int(input("Enter number of days: "))
 
-        stats = parse_stats(stats_file)                         # read new stats file
-        #stats = parse_stats(new_statsfile)                         # read new stats file
+        stats = parse_stats(new_statsfile)                      # read new stats file
         basestats = cal_basestats(events, stats)                # get combine event and stats file and save as basestats.txtprint(f"Generating event log for {days} number of days...")
         save_basestats(basestats)                               # Save baseline stats into a baseline.txt file
         
@@ -584,5 +583,5 @@ if __name__ == "__main__":
         dailycounter = cal_dailycounter(event_log, event_stats, threshold)
         save_dailycounter(dailycounter, threshold)
 
-        #counter = counter + 1 # increase counter per generation
+        counter = counter + 1 # increase counter per generation
 
