@@ -1,6 +1,0 @@
-Event Name     	Mean    	Std Dev 	Min     	Max     	Weight  	Data Type
-Logins         	4.0     	1.5     	0       	0       	2       	D       
-Time online    	150.5   	25.0    	0.00    	1440.00 	3       	C       
-Emails sent    	10.0    	3.0     	0       	0       	1       	D       
-Emails opened  	12.0    	4.5     	0       	0       	1       	D       
-Emails deleted 	7.0     	2.25    	0       	0       	2       	D       

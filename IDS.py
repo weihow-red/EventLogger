@@ -344,14 +344,16 @@ def save_event_log(event_log):
 
         # Save event_log to a text file in a tab-separated format
         with open(filename, 'w') as f:
-            # Write event log header with alignment
-            f.write(f"{'Day':<10}\t{'Logins':<10}\t{'Time Online':<10}\t{'Emails sent':<10}\t{'Emails opened':<10}\t{'Emails deleted':<10}\n")
-            
-            # Write each event's stats with better alignment
+            # Extract headers dynamically based on the keys in the first event in event_log
+            headers = list(event_log[0].keys())  # event_log is a list of dictionaries
+            header_line = "\t".join([f"{header:<12}" for header in headers])
+            f.write(header_line + "\n")
+
+            # Write each event's data dynamically
             for event in event_log:
-                # Format the line with the data
-                line = f"{event['Day']:<10}\t{event['Logins']:<10}\t{event['Time online']:<10}\t{event['Emails sent']:<10}\t{event['Emails opened']:<12}\t{event['Emails deleted']:<10}\n"
-                f.write(line)
+                # Format each line dynamically based on keys
+                line = "\t".join([f"{event[key]:<12}" for key in headers])
+                f.write(line + "\n")
 
         print(f"Successfully save event logs as {filename}")
 
@@ -479,7 +481,7 @@ def cal_dailycounter(event_log, event_stats, threshold):
                 weight = stat_values['Weight']
 
                 # Calculate anomaly counter for each event
-                anomaly_score = (abs(mean - event_value) / std_dev) * weight
+                anomaly_score = round(((abs(mean - event_value) / std_dev) * weight), 4)
                 event_anomaly[event_name] = anomaly_score
                 anomaly_sum += anomaly_score
             else:
@@ -511,19 +513,22 @@ def save_dailycounter(dailycounter, threshold):
 
         # Save event_log to a text file in a tab-separated format
         with open(filename, 'w') as f:
-            # Write event log header with alignment
-            f.write(f"{'Threshold':<10}{threshold:<5}\n")
 
-            # Write event log header with alignment
-            f.write(f"{'Day':<5}\t{'Logins':<20}\t{'Time Online':<20}\t{'Emails sent':<20}\t{'Emails opened':<20}\t{'Emails deleted':<20}\t{'Total Anomally':<20}\t{'Status':<20}\n")
-            
-            # Write each event's stats with better alignment
-            for event in dailycounter:
-                if (event == 'Threshold'): continue
-
-                # Format the line with the data
-                line = f"{event['Day']:<5}\t{event['Logins']:<20}\t{event['Time online']:<20}\t{event['Emails sent']:<20}\t{event['Emails opened']:<20}\t{event['Emails deleted']:<20}\t{event['Total Anomally']:<20}\t{event['Status']:<20}\n"
-                f.write(line)
+                # Write the threshold line
+                f.write(f"{'Threshold':<10}{threshold:<5}\n\n")
+                
+                # Get headers dynamically from the keys of the first item in `dailycounter`
+                headers = list(dailycounter[0].keys())
+                
+                # Write headers dynamically
+                header_line = "\t".join([f"{header:<18}" for header in headers])
+                f.write(header_line + "\n")
+                
+                # Write each row's data
+                for event in dailycounter:
+                    # Format each line using the values in `event`
+                    line = "\t".join([f"{str(event[key]):<18}" for key in headers])
+                    f.write(line + "\n")
 
         print(f"Successfully save daily counter as {filename}")
 
@@ -531,7 +536,22 @@ def save_dailycounter(dailycounter, threshold):
         print(f"Daily counter is empty.")
 
     return
+def pretty_print_result(dailycounter, threshold):
 
+    # Print Threshold
+    print(f"Threshold : {threshold}")
+
+    # Print header
+    print(f"{'Total Anommaly':<18}{'Status':<18}") 
+
+    # Print anomally counter and status
+    # Write each row's data
+    for event in dailycounter:
+        # Format each line using the values in `event`
+        line = f"{event['Total Anomally']:<20}{event['Status']:<20}"
+        print(line)
+
+    return
 
 if __name__ == "__main__":
     print(f"Starting Intrusion Detection System with {function} mode.")
@@ -582,6 +602,8 @@ if __name__ == "__main__":
         threshold = cal_threshold(event_stats)
         dailycounter = cal_dailycounter(event_log, event_stats, threshold)
         save_dailycounter(dailycounter, threshold)
+
+        pretty_print_result(dailycounter, threshold)
 
         counter = counter + 1 # increase counter per generation
 
