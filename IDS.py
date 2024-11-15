@@ -563,11 +563,6 @@ if __name__ == "__main__":
     save_analysis_stats(event_stats)                                    # Save stats into a event_stat#.txt file
     save_daily_total(daily_total)                                       # Save daily total into a daily_total#.txt file
 
-    # testing anomally detection
-    threshold = cal_threshold(event_stats)
-    dailycounter = cal_dailycounter(event_log, event_stats, threshold)
-    save_dailycounter(dailycounter, threshold)
-
     counter = counter + 1 # increase counter per generation
 
     while (True):
@@ -586,11 +581,11 @@ if __name__ == "__main__":
         
         print(f"Analysing event logs...")
         event_stats, daily_total = analysis_events(event_log, basestats)# Analyise statistic of event log
-        save_analysis_stats(event_stats)                                # Save stats into a event_stat.txt file
+        save_analysis_stats(event_stats)                                # Save stats into a event_livestats.txt file
         save_daily_total(daily_total)                                   # Save daily total into a daily_total.txt file
         
-        
-        # testing anomally detection
+        # Anomally detection
+        print(f"Running Alert Engine...")
         threshold = cal_threshold(event_stats)
         dailycounter = cal_dailycounter(event_log, event_stats, threshold)
         save_dailycounter(dailycounter, threshold)
