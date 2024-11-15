@@ -267,7 +267,6 @@ def generate_event_data(basestats, total_num_days):
     Returns a list of generated dictionary, events for each day.
     '''
     event_log = []
-    threshold = cal_threshold(basestats)
 
     # Generate random values to normalization
     random_discrete_vals = []
@@ -316,13 +315,6 @@ def generate_event_data(basestats, total_num_days):
             # Log the event value for the day
             daily_events["Day"] = day
             daily_events[event_name] = event_value
-
-            # Check if this event exceeds the threshold
-            deviation = abs(event_value - mean_val) / std_dev if std_dev != 0 else 0
-            score = deviation * weight
-            
-            if score > threshold:
-                print(f"Alert: {event_name} score {score} exceeds threshold {threshold} on Day {day}")
 
         # Append the day's events to the event log
         event_log.append(daily_events)
