@@ -270,13 +270,16 @@ def generate_event_data(basestats, total_num_days):
 
     # Generate random values to normalization
     random_discrete_vals = []
-    for _ in range(total_num_days):
-        random_val = random.randint(0, 100000)
+    for i in range(total_num_days):
+        random_limit = 10000
+        if (i > 5): random_limit = 1000
+        random_val = random.randint(0, random_limit)
         random_discrete_vals.append(random_val)
 
     random_cont_vals = []
-    for _ in range(total_num_days):
-        random_val = random.randint(0, 3000)
+    for i in range(total_num_days):
+        random_limit = 3000
+        random_val = random.randint(0, random_limit)
         random_cont_vals.append(random_val)
 
     # Calculate mean and std for continous and discrete datatype for zscore normalization
